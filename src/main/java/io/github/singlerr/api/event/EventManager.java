@@ -23,9 +23,11 @@ public final class EventManager {
     }
 
     public void registerEventListener(EventListener<? extends Event> listener){
+        /*
         if(listener.getEventClass().equals(MessageCreateEvent.class)){
             throw new IllegalArgumentException("Cannot register MessageCreateEvent listener class. Please register command executor instead.");
         }
+         */
         registeredListeners.add(listener);
     }
 

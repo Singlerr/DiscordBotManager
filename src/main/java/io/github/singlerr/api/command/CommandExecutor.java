@@ -6,5 +6,5 @@ import reactor.util.annotation.NonNull;
 public interface CommandExecutor {
     @NonNull
     String getLabel();
-    void execute(Context ctx, String[] args);
+    void execute(CommandContext ctx, String[] args);
 }

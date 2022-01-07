@@ -3,6 +3,7 @@ package io.github.singlerr.api.module;
 import io.github.singlerr.utils.FileUtils;
 import lombok.Getter;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -16,6 +17,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 import java.util.jar.JarFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 
 public final class ModuleManager {
@@ -41,24 +44,24 @@ public final class ModuleManager {
                     throw new IllegalArgumentException("A module must have conf.xml file in its jar file.");
 
                 Document confXml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(jarFile.getInputStream(confEntry));
+                Element root = confXml.getDocumentElement();
 
-                NodeList mNodeList = confXml.getElementsByTagName("moduleName");
+                NodeList mNodeList = root.getElementsByTagName("moduleName");
                 if(mNodeList.getLength() > 1)
                     throw new IllegalArgumentException("A module config must have one module name node.");
 
                 String moduleName =  mNodeList.item(0).getTextContent();
 
-                NodeList pNodeList = confXml.getElementsByTagName("mainPath");
+                NodeList pNodeList = root.getElementsByTagName("mainPath");
                 if(pNodeList.getLength() > 1)
                     throw new IllegalArgumentException("A module config must have one main path node.");
 
                 String mainPath = pNodeList.item(0).getTextContent();
 
-                new URLClassLoader(new URL[]{file.toURI().toURL()},getClass().getClassLoader());
-
+                URLClassLoader loader = new URLClassLoader(new URL[]{file.toURI().toURL()},getClass().getClassLoader());
                 Class<?> jarClass;
                 try{
-                    jarClass = Class.forName(mainPath);
+                    jarClass = loader.loadClass(mainPath);
                 }catch (ClassNotFoundException ex){
                     throw new IllegalArgumentException(String.format("A class '%s' does not exist.",mainPath));
                 }
@@ -73,6 +76,8 @@ public final class ModuleManager {
                 module.init(moduleName);
                 module.onEnable();
                 registeredModules.put(moduleName,module);
+
+                Logger.getGlobal().log(Level.INFO,String.format("Loaded %s.",moduleName));
             }catch (IOException | ParserConfigurationException | SAXException | NoSuchMethodException ex){
                 ex.printStackTrace();
             } catch (InvocationTargetException e) {

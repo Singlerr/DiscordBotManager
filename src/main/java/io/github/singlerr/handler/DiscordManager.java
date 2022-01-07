@@ -17,6 +17,8 @@ import io.github.singlerr.api.event.EventManager;
 import lombok.Builder;
 
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DiscordManager {
     private final String token;
@@ -39,7 +41,7 @@ public class DiscordManager {
             }));
         }
         gateway.getEventDispatcher().on(ReadyEvent.class).subscribe(event -> {
-            System.out.println(String.format(
+            Logger.getGlobal().log(Level.INFO,String.format(
                     "Logged in as %s#%s", event.getSelf().getUsername(), event.getSelf().getDiscriminator()
             ));
         });
@@ -53,7 +55,8 @@ public class DiscordManager {
 
             CommandExecutor command = CommandManager.getManager().getCommand(label);
             if(command != null){
-                command.execute(new SimpleCommandContext(client,gateway,msg), Arrays.copyOfRange(args,1,args.length - 1));
+
+                command.execute(new SimpleCommandContext(client,gateway,msg), Arrays.copyOfRange(args,1,args.length > 1 ? args.length - 1 : 1 ));
             }
         });
         gateway.onDisconnect().block();
